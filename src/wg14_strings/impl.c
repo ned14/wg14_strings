@@ -3,6 +3,10 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#ifdef _MSC_VER
+#pragma warning(disable : 4200)  // zero-sized array in struct/union
+#endif
+
 struct varuint8_1_t
 {
   uint8_t length[1];
@@ -42,7 +46,7 @@ WG14_STRING_PREFIX(varuint8_fill)(void *buf, size_t buflen, const uint8_t *data,
   {
     assert(datalen < 8);
     struct varuint8_1_t *a = (struct varuint8_1_t *) buf;
-    a->length[0] = 0xf8 + datalen;
+    a->length[0] = (uint8_t) (0xf8 + datalen);
     memcpy(a->data, data, datalen);
     return (WG14_STRING_PREFIX(varuint8_t) *) a;
   }
@@ -50,8 +54,8 @@ WG14_STRING_PREFIX(varuint8_fill)(void *buf, size_t buflen, const uint8_t *data,
   {
     assert(datalen < 72);
     struct varuint8_2_t *a = (struct varuint8_2_t *) buf;
-    a->length[0] = 0xf5;
-    a->length[1] = 0x80 | (datalen - 8);
+    a->length[0] = (uint8_t) (0xf5);
+    a->length[1] = (uint8_t) (0x80 | (datalen - 8));
     memcpy(a->data, data, datalen);
     return (WG14_STRING_PREFIX(varuint8_t) *) a;
   }
@@ -59,11 +63,11 @@ WG14_STRING_PREFIX(varuint8_fill)(void *buf, size_t buflen, const uint8_t *data,
   {
     assert(datalen < 262216);
     struct varuint8_4_t *a = (struct varuint8_4_t *) buf;
-    a->length[0] = 0xf6;
+    a->length[0] = (uint8_t) (0xf6);
     const size_t l = datalen - 72;
-    a->length[1] = 0x80 | ((l >> 12) & 0x3f);
-    a->length[2] = 0x80 | ((l >> 6) & 0x3f);
-    a->length[3] = 0x80 | ((l >> 0) & 0x3f);
+    a->length[1] = (uint8_t) (0x80 | ((l >> 12) & 0x3f));
+    a->length[2] = (uint8_t) (0x80 | ((l >> 6) & 0x3f));
+    a->length[3] = (uint8_t) (0x80 | ((l >> 0) & 0x3f));
     memcpy(a->data, data, datalen);
     return (WG14_STRING_PREFIX(varuint8_t) *) a;
   }
@@ -71,15 +75,15 @@ WG14_STRING_PREFIX(varuint8_fill)(void *buf, size_t buflen, const uint8_t *data,
   {
     assert(datalen < 4398046773319ULL);
     struct varuint8_8_t *a = (struct varuint8_8_t *) buf;
-    a->length[0] = 0xf7;
+    a->length[0] = (uint8_t) (0xf7);
     const size_t l = datalen - 262216;
-    a->length[1] = 0x80 | ((l >> 36) & 0x3f);
-    a->length[2] = 0x80 | ((l >> 30) & 0x3f);
-    a->length[3] = 0x80 | ((l >> 24) & 0x3f);
-    a->length[4] = 0x80 | ((l >> 18) & 0x3f);
-    a->length[5] = 0x80 | ((l >> 12) & 0x3f);
-    a->length[6] = 0x80 | ((l >> 6) & 0x3f);
-    a->length[7] = 0x80 | ((l >> 0) & 0x3f);
+    a->length[1] = (uint8_t) (0x80 | ((l >> 36) & 0x3f));
+    a->length[2] = (uint8_t) (0x80 | ((l >> 30) & 0x3f));
+    a->length[3] = (uint8_t) (0x80 | ((l >> 24) & 0x3f));
+    a->length[4] = (uint8_t) (0x80 | ((l >> 18) & 0x3f));
+    a->length[5] = (uint8_t) (0x80 | ((l >> 12) & 0x3f));
+    a->length[6] = (uint8_t) (0x80 | ((l >> 6) & 0x3f));
+    a->length[7] = (uint8_t) (0x80 | ((l >> 0) & 0x3f));
     memcpy(a->data, data, datalen);
     return (WG14_STRING_PREFIX(varuint8_t) *) a;
   }
@@ -118,16 +122,16 @@ size_t
 WG14_STRING_PREFIX(varuint8_length)(const WG14_STRING_PREFIX(varuint8_t) * arr_)
 {
   const struct varuint8_1_t *p = (const struct varuint8_1_t *) arr_;
-  if(p->length[0] >= 0xf8)
+  WG14_STRING_IF_LIKELY(p->length[0] >= 0xf8)
   {
     return p->length[0] & 7;
   }
-  if(0xf5 == p->length[0])
+  WG14_STRING_IF_LIKELY(0xf5 == p->length[0])
   {
     const struct varuint8_2_t *a = (const struct varuint8_2_t *) arr_;
     return 8 + (a->length[1] & 0x3f);
   }
-  if(0xf6 == p->length[0])
+  WG14_STRING_IF_LIKELY(0xf6 == p->length[0])
   {
     const struct varuint8_4_t *a = (const struct varuint8_4_t *) arr_;
     union
@@ -139,7 +143,7 @@ WG14_STRING_PREFIX(varuint8_length)(const WG14_STRING_PREFIX(varuint8_t) * arr_)
     return 72 + ((size_t) (x.b[3] & 0x3f) << 0) +
            ((size_t) (x.b[2] & 0x3f) << 6) + ((size_t) (x.b[1] & 0x3f) << 12);
   }
-  if(0xf7 == p->length[0])
+  WG14_STRING_IF_LIKELY(0xf7 == p->length[0])
   {
     const struct varuint8_8_t *a = (const struct varuint8_8_t *) arr_;
     union
@@ -160,16 +164,16 @@ size_t
 WG14_STRING_PREFIX(varuint8_sizeof)(const WG14_STRING_PREFIX(varuint8_t) * arr_)
 {
   const struct varuint8_1_t *p = (const struct varuint8_1_t *) arr_;
-  if(p->length[0] >= 0xf8)
+  WG14_STRING_IF_LIKELY(p->length[0] >= 0xf8)
   {
     return 1 + (p->length[0] & 7);
   }
-  if(0xf5 == p->length[0])
+  WG14_STRING_IF_LIKELY(0xf5 == p->length[0])
   {
     const struct varuint8_2_t *a = (const struct varuint8_2_t *) arr_;
     return 2 + 8 + (a->length[1] & 0x3f);
   }
-  if(0xf6 == p->length[0])
+  WG14_STRING_IF_LIKELY(0xf6 == p->length[0])
   {
     const struct varuint8_4_t *a = (const struct varuint8_4_t *) arr_;
     union
@@ -181,7 +185,7 @@ WG14_STRING_PREFIX(varuint8_sizeof)(const WG14_STRING_PREFIX(varuint8_t) * arr_)
     return 4 + 72 + ((size_t) (x.b[3] & 0x3f) << 0) +
            ((size_t) (x.b[2] & 0x3f) << 6) + ((size_t) (x.b[1] & 0x3f) << 12);
   }
-  if(0xf7 == p->length[0])
+  WG14_STRING_IF_LIKELY(0xf7 == p->length[0])
   {
     const struct varuint8_8_t *a = (const struct varuint8_8_t *) arr_;
     union
@@ -203,7 +207,7 @@ uint8_t *WG14_STRING_PREFIX(varuint8_index)(WG14_STRING_PREFIX(varuint8_t) *
                                             size_t idx)
 {
   const struct varuint8_1_t *p = (const struct varuint8_1_t *) arr_;
-  if(p->length[0] >= 0xf8)
+  WG14_STRING_IF_LIKELY(p->length[0] >= 0xf8)
   {
     const size_t length = p->length[0] & 7;
     if(idx >= length)
@@ -212,7 +216,7 @@ uint8_t *WG14_STRING_PREFIX(varuint8_index)(WG14_STRING_PREFIX(varuint8_t) *
     }
     return (uint8_t *) p->data + idx;
   }
-  if(0xf5 == p->length[0])
+  WG14_STRING_IF_LIKELY(0xf5 == p->length[0])
   {
     const struct varuint8_2_t *a = (const struct varuint8_2_t *) arr_;
     const size_t length = 8 + (a->length[1] & 0x3f);
@@ -222,7 +226,7 @@ uint8_t *WG14_STRING_PREFIX(varuint8_index)(WG14_STRING_PREFIX(varuint8_t) *
     }
     return (uint8_t *) a->data + idx;
   }
-  if(0xf6 == p->length[0])
+  WG14_STRING_IF_LIKELY(0xf6 == p->length[0])
   {
     const struct varuint8_4_t *a = (const struct varuint8_4_t *) arr_;
     union
@@ -240,7 +244,7 @@ uint8_t *WG14_STRING_PREFIX(varuint8_index)(WG14_STRING_PREFIX(varuint8_t) *
     }
     return (uint8_t *) a->data + idx;
   }
-  if(0xf7 == p->length[0])
+  WG14_STRING_IF_LIKELY(0xf7 == p->length[0])
   {
     const struct varuint8_8_t *a = (const struct varuint8_8_t *) arr_;
     union
@@ -273,7 +277,7 @@ uint8_t *WG14_STRING_PREFIX(varuint8_back)(WG14_STRING_PREFIX(varuint8_t) *
                                            arr_)
 {
   const struct varuint8_1_t *p = (const struct varuint8_1_t *) arr_;
-  if(p->length[0] >= 0xf8)
+  WG14_STRING_IF_LIKELY(p->length[0] >= 0xf8)
   {
     const size_t length = p->length[0] & 7;
     if(0 == length)
@@ -282,13 +286,13 @@ uint8_t *WG14_STRING_PREFIX(varuint8_back)(WG14_STRING_PREFIX(varuint8_t) *
     }
     return (uint8_t *) p->data + length - 1;
   }
-  if(0xf5 == p->length[0])
+  WG14_STRING_IF_LIKELY(0xf5 == p->length[0])
   {
     const struct varuint8_2_t *a = (const struct varuint8_2_t *) arr_;
     const size_t length = 8 + (a->length[1] & 0x3f);
     return (uint8_t *) a->data + length - 1;
   }
-  if(0xf6 == p->length[0])
+  WG14_STRING_IF_LIKELY(0xf6 == p->length[0])
   {
     const struct varuint8_4_t *a = (const struct varuint8_4_t *) arr_;
     union
@@ -302,7 +306,7 @@ uint8_t *WG14_STRING_PREFIX(varuint8_back)(WG14_STRING_PREFIX(varuint8_t) *
                           ((size_t) (x.b[1] & 0x3f) << 12);
     return (uint8_t *) a->data + length - 1;
   }
-  if(0xf7 == p->length[0])
+  WG14_STRING_IF_LIKELY(0xf7 == p->length[0])
   {
     const struct varuint8_8_t *a = (const struct varuint8_8_t *) arr_;
     union

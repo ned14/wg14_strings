@@ -32,6 +32,16 @@ limitations under the License.
 #define WG14_STRING_INLINE inline
 #endif
 
+#ifndef WG14_STRING_IF_LIKELY
+#if __GNUC__
+#define WG14_STRING_IF_LIKELY(expr) if(__builtin_expect(!!(expr), 1))
+#elif __STDC_VERSION__ >= 202300L
+#define WG14_STRING_IF_LIKELY(expr) if(expr) [[likely]]
+#else
+#define WG14_STRING_IF_LIKELY(expr) if(expr)
+#endif
+#endif
+
 #ifndef WG14_STRING_NULLPTR
 #if __STDC_VERSION__ >= 202300L
 #define WG14_STRING_NULLPTR nullptr
