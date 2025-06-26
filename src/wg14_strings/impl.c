@@ -1,6 +1,7 @@
 #include "wg14_strings/config.h"
 
-#include <string.h>
+#include <assert.h>
+#include <stdlib.h>
 
 struct varuint8_1_t
 {
@@ -26,11 +27,98 @@ struct varuint8_8_t
   uint8_t data[];
 };
 
+WG14_STRING_PREFIX(varuint8_t) *
+WG14_STRING_PREFIX(varuint8_fill)(void *buf, size_t buflen, const uint8_t *data,
+                                  size_t datalen)
+{
+  const size_t headerlen = WG14_STRING_PREFIX(varuint8_header_size)(datalen);
+  if(datalen + headerlen > buflen)
+  {
+    return WG14_STRING_NULLPTR;
+  }
+  switch(headerlen)
+  {
+  case 1:
+  {
+    assert(datalen < 8);
+    struct varuint8_1_t *a = (struct varuint8_1_t *) buf;
+    a->length[0] = 0xf8 + datalen;
+    memcpy(a->data, data, datalen);
+    return (WG14_STRING_PREFIX(varuint8_t) *) a;
+  }
+  case 2:
+  {
+    assert(datalen < 72);
+    struct varuint8_2_t *a = (struct varuint8_2_t *) buf;
+    a->length[0] = 0xf5;
+    a->length[1] = 0x80 | (datalen - 8);
+    memcpy(a->data, data, datalen);
+    return (WG14_STRING_PREFIX(varuint8_t) *) a;
+  }
+  case 4:
+  {
+    assert(datalen < 262216);
+    struct varuint8_4_t *a = (struct varuint8_4_t *) buf;
+    a->length[0] = 0xf6;
+    const size_t l = datalen - 72;
+    a->length[1] = 0x80 | ((l >> 12) & 0x3f);
+    a->length[2] = 0x80 | ((l >> 6) & 0x3f);
+    a->length[3] = 0x80 | ((l >> 0) & 0x3f);
+    memcpy(a->data, data, datalen);
+    return (WG14_STRING_PREFIX(varuint8_t) *) a;
+  }
+  case 8:
+  {
+    assert(datalen < 4398046773319ULL);
+    struct varuint8_8_t *a = (struct varuint8_8_t *) buf;
+    a->length[0] = 0xf7;
+    const size_t l = datalen - 262216;
+    a->length[1] = 0x80 | ((l >> 36) & 0x3f);
+    a->length[2] = 0x80 | ((l >> 30) & 0x3f);
+    a->length[3] = 0x80 | ((l >> 24) & 0x3f);
+    a->length[4] = 0x80 | ((l >> 18) & 0x3f);
+    a->length[5] = 0x80 | ((l >> 12) & 0x3f);
+    a->length[6] = 0x80 | ((l >> 6) & 0x3f);
+    a->length[7] = 0x80 | ((l >> 0) & 0x3f);
+    memcpy(a->data, data, datalen);
+    return (WG14_STRING_PREFIX(varuint8_t) *) a;
+  }
+  default:
+    return WG14_STRING_NULLPTR;
+  }
+}
+
+WG14_STRING_PREFIX(varuint8_t) *
+WG14_STRING_PREFIX(varuint8_malloc)(const uint8_t *data, size_t datalen)
+{
+  const size_t headerlen = WG14_STRING_PREFIX(varuint8_header_size)(datalen);
+  void *ret = malloc(datalen + headerlen);
+  if(ret == WG14_STRING_NULLPTR)
+  {
+    return WG14_STRING_NULLPTR;
+  }
+  return WG14_STRING_PREFIX(varuint8_fill)(ret, datalen + headerlen, data,
+                                           datalen);
+}
+
+WG14_STRING_PREFIX(varuint8_t) *
+WG14_STRING_PREFIX(varuint8_dup)(const WG14_STRING_PREFIX(varuint8_t) * arr)
+{
+  const size_t totallen = WG14_STRING_PREFIX(varuint8_sizeof)(arr);
+  void *ret = malloc(totallen);
+  if(ret == WG14_STRING_NULLPTR)
+  {
+    return WG14_STRING_NULLPTR;
+  }
+  memcpy(ret, arr, totallen);
+  return (WG14_STRING_PREFIX(varuint8_t) *) ret;
+}
+
 size_t
 WG14_STRING_PREFIX(varuint8_length)(const WG14_STRING_PREFIX(varuint8_t) * arr_)
 {
   const struct varuint8_1_t *p = (const struct varuint8_1_t *) arr_;
-  if(p->length[0] >= 0xf8 && p->length[0] <= 0xff)
+  if(p->length[0] >= 0xf8)
   {
     return p->length[0] & 7;
   }
@@ -57,7 +145,7 @@ WG14_STRING_PREFIX(varuint8_length)(const WG14_STRING_PREFIX(varuint8_t) * arr_)
     union
     {
       uint64_t v;
-      uint8_t b[4];
+      uint8_t b[8];
     } x;
     x.v = *(const uint64_t *) a->length;
     return 262216 + ((size_t) (x.b[7] & 0x3f) << 0) +
@@ -72,7 +160,7 @@ size_t
 WG14_STRING_PREFIX(varuint8_sizeof)(const WG14_STRING_PREFIX(varuint8_t) * arr_)
 {
   const struct varuint8_1_t *p = (const struct varuint8_1_t *) arr_;
-  if(p->length[0] >= 0xf8 && p->length[0] <= 0xff)
+  if(p->length[0] >= 0xf8)
   {
     return 1 + (p->length[0] & 7);
   }
@@ -99,7 +187,7 @@ WG14_STRING_PREFIX(varuint8_sizeof)(const WG14_STRING_PREFIX(varuint8_t) * arr_)
     union
     {
       uint64_t v;
-      uint8_t b[4];
+      uint8_t b[8];
     } x;
     x.v = *(const uint64_t *) a->length;
     return 8 + 262216 + ((size_t) (x.b[7] & 0x3f) << 0) +
@@ -115,14 +203,14 @@ uint8_t *WG14_STRING_PREFIX(varuint8_index)(WG14_STRING_PREFIX(varuint8_t) *
                                             size_t idx)
 {
   const struct varuint8_1_t *p = (const struct varuint8_1_t *) arr_;
-  if(p->length[0] >= 0xf8 && p->length[0] <= 0xff)
+  if(p->length[0] >= 0xf8)
   {
     const size_t length = p->length[0] & 7;
     if(idx >= length)
     {
       return WG14_STRING_NULLPTR;
     }
-    return ((uint8_t *) arr_) + 1 + idx;
+    return (uint8_t *) p->data + idx;
   }
   if(0xf5 == p->length[0])
   {
@@ -132,7 +220,7 @@ uint8_t *WG14_STRING_PREFIX(varuint8_index)(WG14_STRING_PREFIX(varuint8_t) *
     {
       return WG14_STRING_NULLPTR;
     }
-    return ((uint8_t *) arr_) + 2 + idx;
+    return (uint8_t *) a->data + idx;
   }
   if(0xf6 == p->length[0])
   {
@@ -150,7 +238,7 @@ uint8_t *WG14_STRING_PREFIX(varuint8_index)(WG14_STRING_PREFIX(varuint8_t) *
     {
       return WG14_STRING_NULLPTR;
     }
-    return ((uint8_t *) arr_) + 4 + idx;
+    return (uint8_t *) a->data + idx;
   }
   if(0xf7 == p->length[0])
   {
@@ -158,7 +246,7 @@ uint8_t *WG14_STRING_PREFIX(varuint8_index)(WG14_STRING_PREFIX(varuint8_t) *
     union
     {
       uint64_t v;
-      uint8_t b[4];
+      uint8_t b[8];
     } x;
     x.v = *(const uint64_t *) a->length;
     const size_t length =
@@ -170,7 +258,7 @@ uint8_t *WG14_STRING_PREFIX(varuint8_index)(WG14_STRING_PREFIX(varuint8_t) *
     {
       return WG14_STRING_NULLPTR;
     }
-    return ((uint8_t *) arr_) + 8 + idx;
+    return (uint8_t *) a->data + idx;
   }
   return WG14_STRING_NULLPTR;
 }
@@ -185,16 +273,20 @@ uint8_t *WG14_STRING_PREFIX(varuint8_back)(WG14_STRING_PREFIX(varuint8_t) *
                                            arr_)
 {
   const struct varuint8_1_t *p = (const struct varuint8_1_t *) arr_;
-  if(p->length[0] >= 0xf8 && p->length[0] <= 0xff)
+  if(p->length[0] >= 0xf8)
   {
     const size_t length = p->length[0] & 7;
-    return ((uint8_t *) arr_) + length;
+    if(0 == length)
+    {
+      return WG14_STRING_NULLPTR;
+    }
+    return (uint8_t *) p->data + length - 1;
   }
   if(0xf5 == p->length[0])
   {
     const struct varuint8_2_t *a = (const struct varuint8_2_t *) arr_;
     const size_t length = 8 + (a->length[1] & 0x3f);
-    return ((uint8_t *) arr_) + 1 + length;
+    return (uint8_t *) a->data + length - 1;
   }
   if(0xf6 == p->length[0])
   {
@@ -208,7 +300,7 @@ uint8_t *WG14_STRING_PREFIX(varuint8_back)(WG14_STRING_PREFIX(varuint8_t) *
     const size_t length = 72 + ((size_t) (x.b[3] & 0x3f) << 0) +
                           ((size_t) (x.b[2] & 0x3f) << 6) +
                           ((size_t) (x.b[1] & 0x3f) << 12);
-    return ((uint8_t *) arr_) + 3 + length;
+    return (uint8_t *) a->data + length - 1;
   }
   if(0xf7 == p->length[0])
   {
@@ -216,7 +308,7 @@ uint8_t *WG14_STRING_PREFIX(varuint8_back)(WG14_STRING_PREFIX(varuint8_t) *
     union
     {
       uint64_t v;
-      uint8_t b[4];
+      uint8_t b[8];
     } x;
     x.v = *(const uint64_t *) a->length;
     const size_t length =
@@ -224,7 +316,7 @@ uint8_t *WG14_STRING_PREFIX(varuint8_back)(WG14_STRING_PREFIX(varuint8_t) *
     ((size_t) (x.b[5] & 0x3f) << 12) + ((size_t) (x.b[4] & 0x3f) << 18) +
     ((size_t) (x.b[3] & 0x3f) << 24) + ((size_t) (x.b[2] & 0x3f) << 30) +
     ((size_t) (x.b[1] & 0x3f) << 36);
-    return ((uint8_t *) arr_) + 7 + length;
+    return (uint8_t *) a->data + length - 1;
   }
   return WG14_STRING_NULLPTR;
 }
@@ -238,7 +330,7 @@ char8_t *WG14_STRING_PREFIX(ntbs_from_varuint8)(WG14_STRING_PREFIX(varuint8_t) *
     return WG14_STRING_NULLPTR;
   }
   uint8_t *const front = varuint8_front(arr);
-  if(back != memchr(front, 0, back - front))
+  if(back != memchr(front, 0, back - front + 1))
   {
     return WG14_STRING_NULLPTR;
   }
@@ -275,6 +367,7 @@ WG14_STRING_PREFIX(varuint8_t) * arr, size_t idx)
     default:
       break;
     }
+    // TODO: Check for other illegal sequences of two bytes
     // If a continuation byte, wind backwards
     if((*p & 0xc0) != 0x80)
     {

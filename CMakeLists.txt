@@ -79,6 +79,6 @@ if(PROJECT_IS_TOP_LEVEL AND (NOT DEFINED BUILD_TESTING OR BUILD_TESTING))
     add_test(NAME ${target} COMMAND $<TARGET_FILE:${target}>)
   endfunction()
 
-  #add_subdirectory("test")
+  add_subdirectory("test")
 endif()
 

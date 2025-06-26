@@ -22,6 +22,7 @@ limitations under the License.
 
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
 #ifndef WG14_STRING_PREFIX
 #define WG14_STRING_PREFIX(x) x
@@ -75,38 +76,101 @@ extern "C"
 
   typedef struct WG14_STRING_PREFIX(varuint8_t) WG14_STRING_PREFIX(varuint8_t);
 
-  // Returns the size of the array for access
+  //! \brief Returns the number of header octets needed for a given array length
+  //! Returns `MAX_SIZE' if the length is too long for a `varint8_t`.
+  static WG14_STRING_INLINE size_t
+  WG14_STRING_PREFIX(varuint8_header_size)(size_t arraylen)
+  {
+    if(arraylen < 8)
+    {
+      return 1;
+    }
+    if(arraylen < 72)
+    {
+      return 2;
+    }
+    if(arraylen < 262216)
+    {
+      return 4;
+    }
+    if(arraylen < 4398046773319ULL)
+    {
+      return 8;
+    }
+    return (size_t) -1;
+  }
+
+  //! \brief If `datalen` would fit inside `buflen`, place the appropriate
+  //! length of header prefix at `buf` and then `data` following. Otherwise
+  //! return nullptr.
+  WG14_STRING_EXTERN WG14_STRING_PREFIX(varuint8_t) *
+  WG14_STRING_PREFIX(varuint8_fill)(void *buf, size_t buflen,
+                                    const uint8_t *data, size_t datalen);
+
+  //! \brief Convenience alternative for `varuint8_fill()`.
+  static WG14_STRING_INLINE WG14_STRING_PREFIX(varuint8_t) *
+  WG14_STRING_PREFIX(varuint8_fill_ntbs)(void *buf, size_t buflen,
+                                         const char *str)
+  {
+    return WG14_STRING_PREFIX(varuint8_fill)(buf, buflen, (const uint8_t *) str,
+                                             strlen(str) + 1);
+  }
+
+  //! \brief Dynamically memory allocate the correct number of bytes to
+  //! store `datalen` items in the array, and copy `data` into that array.
+  //! You must call `free()` on the returned pointer when done with it.
+  WG14_STRING_EXTERN WG14_STRING_PREFIX(varuint8_t) *
+  WG14_STRING_PREFIX(varuint8_malloc)(const uint8_t *data, size_t datalen);
+
+  //! \brief Convenience alternative for `varuint8_malloc()`.
+  static WG14_STRING_INLINE WG14_STRING_PREFIX(varuint8_t) *
+  WG14_STRING_PREFIX(varuint8_malloc_ntbs)(const char *str)
+  {
+    return WG14_STRING_PREFIX(varuint8_malloc)((const uint8_t *) str,
+                                               strlen(str) + 1);
+  }
+
+  //! \brief Dynamically memory allocate a clone of the `varuint8_t'.
+  //! You must call `free()` on the returned pointer when done with it.
+  WG14_STRING_EXTERN WG14_STRING_PREFIX(varuint8_t) *
+  WG14_STRING_PREFIX(varuint8_dup)(const WG14_STRING_PREFIX(varuint8_t) * arr);
+
+
+  //! \brief Returns the size of the array for access i.e. elements in the
+  //! array.
   WG14_STRING_EXTERN size_t WG14_STRING_PREFIX(varuint8_length)(
   const WG14_STRING_PREFIX(varuint8_t) * arr);
 
-  // Returns the size of the array for memory copying
+  //! \brief Returns the size of the array for memory copying i.e. including
+  //! header bytes.
   WG14_STRING_EXTERN size_t WG14_STRING_PREFIX(varuint8_sizeof)(
   const WG14_STRING_PREFIX(varuint8_t) * arr);
 
-  // Return a pointer to the uint8_t at the beginning of the array
-  // Returns nullptr if array is zero length
+  //! \brief Return a pointer to the uint8_t at the beginning of the array
+  //! Returns nullptr if array is zero length.
   WG14_STRING_EXTERN uint8_t *
   WG14_STRING_PREFIX(varuint8_front)(WG14_STRING_PREFIX(varuint8_t) * arr);
 
-  // Return a pointer to the uint8_t at the end of the array
-  // Returns nullptr if array is zero length
+  //! \brief Return a pointer to the uint8_t at the end of the array
+  //! Returns nullptr if array is zero length.
   WG14_STRING_EXTERN uint8_t *
   WG14_STRING_PREFIX(varuint8_back)(WG14_STRING_PREFIX(varuint8_t) * arr);
 
-  // Return a pointer to the uint8_t at idx into the array
-  // Returns nullptr if idx is outside array
+  //! \brief Return a pointer to the uint8_t at idx into the array
+  //! Returns nullptr if idx is outside array.
   WG14_STRING_EXTERN uint8_t *
   WG14_STRING_PREFIX(varuint8_index)(WG14_STRING_PREFIX(varuint8_t) * arr,
                                      size_t idx);
 
-  // Return a NTBS if array is null terminated AND contains
-  // no intermediate null values, nullptr otherwise
+  //! \brief Return a NTBS if array is null terminated AND contains
+  //! no intermediate null values, nullptr otherwise. Obviously this implies
+  //! a O(N) complexity. No checking that the array is valid UTF-8 is done.
   WG14_STRING_EXTERN char8_t *
   WG14_STRING_PREFIX(ntbs_from_varuint8)(WG14_STRING_PREFIX(varuint8_t) * arr);
 
-  // Return a pointer to the char8_t at or preceding arr[idx]
-  // Returns nullptr if idx is outside array or there is no
-  // valid UTF-8 codepoint at that index
+  //! \brief Return a pointer to the `char8_t` at or preceding arr[idx]
+  //! Returns nullptr if idx is outside array or there is no
+  //! structurally valid UTF-8 codepoint at that index
   WG14_STRING_EXTERN char8_t *WG14_STRING_PREFIX(char8_from_varuint8_index)(
   WG14_STRING_PREFIX(varuint8_t) * arr, size_t idx);
 
