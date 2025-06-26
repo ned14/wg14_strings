@@ -82,11 +82,19 @@ They have sensible defaults on the major platforms and toolchains.
 
 ### On a MacBook Pro M3 running ARM64
 
-todo
+`varuint8_fill()` takes 2.982468 nanoseconds.
+
+`varuint8_length()` takes 0.742094 nanoseconds.
+
+`varuint8_index()` takes 0.744102 nanoseconds.
 
 ### On a MacBook Pro M3 running ARM64 Windows within a VM
 
-todo
+`varuint8_fill()` takes 3.262135 nanoseconds.
+
+`varuint8_length()` takes 0.758693 nanoseconds.
+
+`varuint8_index()` takes 0.759358 nanoseconds.
 
 # Todo
 

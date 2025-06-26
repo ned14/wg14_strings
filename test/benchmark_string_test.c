@@ -22,8 +22,9 @@ int main(void)
     (cpu_ticks_count) ((double) ticks / (double) ops);
   }
   const cpu_ticks_count ticks_per_sec = ticks_per_second();
-  printf("There are %llu ticks per second and get_ticks_count_overhead=%lu.\n",
-         (unsigned long long) ticks_per_sec, get_ticks_count_overhead);
+  printf("There are %llu ticks per second and get_ticks_count_overhead=%llu.\n",
+         (unsigned long long) ticks_per_sec,
+         (unsigned long long) get_ticks_count_overhead);
   puts("Running benchmark ...");
   char buffer[16];
   {
