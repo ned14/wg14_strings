@@ -87,7 +87,7 @@ extern "C"
   typedef struct WG14_STRING_PREFIX(varuint8_t) WG14_STRING_PREFIX(varuint8_t);
 
   //! \brief Returns the number of header octets needed for a given array length
-  //! Returns `MAX_SIZE' if the length is too long for a `varint8_t`.
+  //! Returns `MAX_SIZE' if the length is too long for a `varuint8_t`.
   static WG14_STRING_INLINE size_t
   WG14_STRING_PREFIX(varuint8_header_size)(size_t arraylen)
   {
@@ -140,6 +140,22 @@ extern "C"
                                                strlen(str) + 1);
   }
 
+  //! \brief Concatenate multiple `varuint8_t'
+  WG14_STRING_EXTERN WG14_STRING_PREFIX(varuint8_t) *
+  WG14_STRING_PREFIX(varuint8_cat_N)(
+  void *buf, size_t buflen, const WG14_STRING_PREFIX(varuint8_t) *const *arrs,
+  size_t arrslen);
+
+  //! \brief Concatenate two `varuint8_t'
+  static WG14_STRING_INLINE WG14_STRING_PREFIX(varuint8_t) *
+  WG14_STRING_PREFIX(varuint8_cat)(void *buf, size_t buflen,
+                                   const WG14_STRING_PREFIX(varuint8_t) * arr1,
+                                   const WG14_STRING_PREFIX(varuint8_t) * arr2)
+  {
+    const WG14_STRING_PREFIX(varuint8_t) *const arrs[2] = {arr1, arr2};
+    return WG14_STRING_PREFIX(varuint8_cat_N)(buf, buflen, arrs, 2);
+  }
+
   //! \brief Dynamically memory allocate a clone of the `varuint8_t'.
   //! You must call `free()` on the returned pointer when done with it.
   WG14_STRING_EXTERN WG14_STRING_PREFIX(varuint8_t) *
@@ -166,6 +182,20 @@ extern "C"
   WG14_STRING_EXTERN uint8_t *
   WG14_STRING_PREFIX(varuint8_back)(WG14_STRING_PREFIX(varuint8_t) * arr);
 
+  //! \brief Return a pointer to the uint8_t just after the end of the array.
+  //! Useful for iteration between front and end.
+  //! Returns nullptr if array is zero length to match front.
+  static WG14_STRING_INLINE uint8_t *
+  WG14_STRING_PREFIX(varuint8_end)(WG14_STRING_PREFIX(varuint8_t) * arr)
+  {
+    uint8_t *back = WG14_STRING_PREFIX(varuint8_back)(arr);
+    if(back == WG14_STRING_NULLPTR)
+    {
+      return WG14_STRING_NULLPTR;
+    }
+    return back + 1;
+  }
+
   //! \brief Return a pointer to the uint8_t at idx into the array
   //! Returns nullptr if idx is outside array.
   WG14_STRING_EXTERN uint8_t *
@@ -183,6 +213,21 @@ extern "C"
   //! structurally valid UTF-8 codepoint at that index
   WG14_STRING_EXTERN char8_t *WG14_STRING_PREFIX(char8_from_varuint8_index)(
   WG14_STRING_PREFIX(varuint8_t) * arr, size_t idx);
+
+  //! \brief Copy a `varuint8_t' into a user supplied buffer.
+  static WG14_STRING_INLINE WG14_STRING_PREFIX(varuint8_t) *
+  WG14_STRING_PREFIX(varuint8_cpy)(void *buf, size_t buflen,
+                                   const WG14_STRING_PREFIX(varuint8_t) * arr)
+  {
+    const size_t length = WG14_STRING_PREFIX(varuint8_length)(arr);
+    return WG14_STRING_PREFIX(varuint8_fill)(
+    buf, buflen,
+    (length > 0) ?
+    WG14_STRING_PREFIX(varuint8_front)((WG14_STRING_PREFIX(varuint8_t) *) arr) :
+    WG14_STRING_NULLPTR,
+    length);
+  }
+
 
 #ifdef __cplusplus
 }

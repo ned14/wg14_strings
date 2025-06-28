@@ -73,7 +73,7 @@ They have sensible defaults on the major platforms and toolchains.
 
 ### On my Threadripper 5975WX which is a 3.6Ghz processor bursting to 4.5Ghz on Linux:
 
-`varuint8_fill()` takes 4.453511 nanoseconds.
+`varuint8_fill()` takes X nanoseconds.
 
 `varuint8_length()` takes 1.109661 nanoseconds.
 
@@ -82,7 +82,7 @@ They have sensible defaults on the major platforms and toolchains.
 
 ### On a MacBook Pro M3 running ARM64
 
-`varuint8_fill()` takes 2.982468 nanoseconds.
+`varuint8_fill()` takes 1.732731 nanoseconds.
 
 `varuint8_length()` takes 0.742094 nanoseconds.
 
@@ -90,7 +90,7 @@ They have sensible defaults on the major platforms and toolchains.
 
 ### On a MacBook Pro M3 running ARM64 Windows within a VM
 
-`varuint8_fill()` takes 3.262135 nanoseconds.
+`varuint8_fill()` takes X nanoseconds.
 
 `varuint8_length()` takes 0.758693 nanoseconds.
 
