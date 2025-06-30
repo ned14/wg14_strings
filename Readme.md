@@ -82,12 +82,26 @@ They have sensible defaults on the major platforms and toolchains.
 
 ### On a MacBook Pro M3 running ARM64
 
-`varuint8_fill()` takes 1.732731 nanoseconds.
+Running benchmark for string '' (length = 1) ...
+    On this platform varuint8_fill() takes 2.488442 nanoseconds.
+    On this platform varuint8_length() takes 0.743631 nanoseconds.
+    On this platform varuint8_index() takes 0.742285 nanoseconds.
 
-`varuint8_length()` takes 0.742094 nanoseconds.
+Running benchmark for string 'nialld' (length = 7) ...
+    On this platform varuint8_fill() takes 4.913913 nanoseconds.
+    On this platform varuint8_length() takes 0.742205 nanoseconds.
+    On this platform varuint8_index() takes 0.742352 nanoseconds.
 
-`varuint8_index()` takes 0.744102 nanoseconds.
+Running benchmark for string 'nialldo' (length = 8) ...
+    On this platform varuint8_fill() takes 2.971138 nanoseconds.
+    On this platform varuint8_length() takes 0.992103 nanoseconds.
+    On this platform varuint8_index() takes 0.990406 nanoseconds.
 
+Running benchmark for string 'Hello, I am a teapot! Short and stout. Lift me up, and pour me out. Goodbye' (length = 76) ...
+    On this platform varuint8_fill() takes 3.465841 nanoseconds.
+    On this platform varuint8_length() takes 1.237405 nanoseconds.
+    On this platform varuint8_index() takes 1.485175 nanoseconds.
+    
 ### On a MacBook Pro M3 running ARM64 Windows within a VM
 
 `varuint8_fill()` takes X nanoseconds.

@@ -25,73 +25,83 @@ int main(void)
   printf("There are %llu ticks per second and get_ticks_count_overhead=%llu.\n",
          (unsigned long long) ticks_per_sec,
          (unsigned long long) get_ticks_count_overhead);
-  puts("Running benchmark ...");
-  char buffer[16];
+  static const char *teststrings[] = {"", "nialld", "nialldo",
+                                      ("Hello, I am a teapot! Short and stout. "
+                                       "Lift me up, and pour me out. Goodbye")};
+  for(size_t i = 0; i < sizeof(teststrings) / sizeof(teststrings[0]); i++)
   {
-    const ns_count begin = get_ns_count();
-    ns_count end = begin;
-    cpu_ticks_count ticks = 0, ops = 0;
-    do
+    const char *teststring = teststrings[i];
+    const size_t teststringlen = strlen(teststring) + 1;
+    printf("\nRunning benchmark for string '%s' (length = %zu) ...\n",
+           teststring, teststringlen);
+    char buffer[256];
     {
-      cpu_ticks_count s = get_ticks_count(memory_order_relaxed);
-      for(size_t n = 0; n < 65536; n++)
+      const ns_count begin = get_ns_count();
+      ns_count end = begin;
+      cpu_ticks_count ticks = 0, ops = 0;
+      do
       {
-        volatile WG14_STRING_PREFIX(varuint8_t) *val = WG14_STRING_PREFIX(
-        varuint8_fill)(buffer, sizeof(buffer), (const uint8_t *) "", 0);
-        (void) val;
-      }
-      cpu_ticks_count e = get_ticks_count(memory_order_relaxed);
-      ticks += e - s - get_ticks_count_overhead;
-      ops += 65536;
-    } while(end = get_ns_count(), end - begin < 3000000000);
-    printf("\nOn this platform varuint8_fill() "
-           "takes %f nanoseconds.\n\n",
-           (double) ticks / ((double) ticks_per_sec / 1000000000.0) /
-           (double) ops);
-  }
-  WG14_STRING_PREFIX(varuint8_t) *arr = WG14_STRING_PREFIX(varuint8_fill)(
-  buffer, sizeof(buffer), (const uint8_t *) "niall", 6);
-  {
-    const ns_count begin = get_ns_count();
-    ns_count end = begin;
-    cpu_ticks_count ticks = 0, ops = 0;
-    do
+        cpu_ticks_count s = get_ticks_count(memory_order_relaxed);
+        for(size_t n = 0; n < 65536; n++)
+        {
+          volatile WG14_STRING_PREFIX(varuint8_t) *val =
+          WG14_STRING_PREFIX(varuint8_fill)(
+          buffer, sizeof(buffer), (const uint8_t *) teststring, teststringlen);
+          (void) val;
+        }
+        cpu_ticks_count e = get_ticks_count(memory_order_relaxed);
+        ticks += e - s - get_ticks_count_overhead;
+        ops += 65536;
+      } while(end = get_ns_count(), end - begin < 3000000000);
+      printf("    On this platform varuint8_fill() "
+             "takes %f nanoseconds.\n",
+             (double) ticks / ((double) ticks_per_sec / 1000000000.0) /
+             (double) ops);
+    }
+    WG14_STRING_PREFIX(varuint8_t) *arr = WG14_STRING_PREFIX(varuint8_fill)(
+    buffer, sizeof(buffer), (const uint8_t *) teststring, teststringlen);
     {
-      cpu_ticks_count s = get_ticks_count(memory_order_relaxed);
-      for(size_t n = 0; n < 65536; n++)
+      const ns_count begin = get_ns_count();
+      ns_count end = begin;
+      cpu_ticks_count ticks = 0, ops = 0;
+      do
       {
-        volatile size_t val = WG14_STRING_PREFIX(varuint8_length)(arr);
-        (void) val;
-      }
-      cpu_ticks_count e = get_ticks_count(memory_order_relaxed);
-      ticks += e - s - get_ticks_count_overhead;
-      ops += 65536;
-    } while(end = get_ns_count(), end - begin < 3000000000);
-    printf("\nOn this platform varuint8_length() "
-           "takes %f nanoseconds.\n\n",
-           (double) ticks / ((double) ticks_per_sec / 1000000000.0) /
-           (double) ops);
-  }
-  {
-    const ns_count begin = get_ns_count();
-    ns_count end = begin;
-    cpu_ticks_count ticks = 0, ops = 0;
-    do
+        cpu_ticks_count s = get_ticks_count(memory_order_relaxed);
+        for(size_t n = 0; n < 65536; n++)
+        {
+          volatile size_t val = WG14_STRING_PREFIX(varuint8_length)(arr);
+          (void) val;
+        }
+        cpu_ticks_count e = get_ticks_count(memory_order_relaxed);
+        ticks += e - s - get_ticks_count_overhead;
+        ops += 65536;
+      } while(end = get_ns_count(), end - begin < 3000000000);
+      printf("    On this platform varuint8_length() "
+             "takes %f nanoseconds.\n",
+             (double) ticks / ((double) ticks_per_sec / 1000000000.0) /
+             (double) ops);
+    }
     {
-      cpu_ticks_count s = get_ticks_count(memory_order_relaxed);
-      for(size_t n = 0; n < 65536; n++)
+      const ns_count begin = get_ns_count();
+      ns_count end = begin;
+      cpu_ticks_count ticks = 0, ops = 0;
+      do
       {
-        volatile uint8_t *val = WG14_STRING_PREFIX(varuint8_index)(arr, 3);
-        (void) val;
-      }
-      cpu_ticks_count e = get_ticks_count(memory_order_relaxed);
-      ticks += e - s - get_ticks_count_overhead;
-      ops += 65536;
-    } while(end = get_ns_count(), end - begin < 3000000000);
-    printf("\nOn this platform varuint8_index() "
-           "takes %f nanoseconds.\n\n",
-           (double) ticks / ((double) ticks_per_sec / 1000000000.0) /
-           (double) ops);
+        cpu_ticks_count s = get_ticks_count(memory_order_relaxed);
+        for(size_t n = 0; n < 65536; n++)
+        {
+          volatile uint8_t *val = WG14_STRING_PREFIX(varuint8_index)(arr, 3);
+          (void) val;
+        }
+        cpu_ticks_count e = get_ticks_count(memory_order_relaxed);
+        ticks += e - s - get_ticks_count_overhead;
+        ops += 65536;
+      } while(end = get_ns_count(), end - begin < 3000000000);
+      printf("    On this platform varuint8_index() "
+             "takes %f nanoseconds.\n",
+             (double) ticks / ((double) ticks_per_sec / 1000000000.0) /
+             (double) ops);
+    }
   }
   printf("Exiting main with result %d ...\n", ret);
   return ret;
